@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark" title="Schedule" backgroundColor="#80A894" viewActivate="init(event)">
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.core.FlexGlobals;
+			
+			import spark.events.IndexChangeEvent;
+			import spark.events.ViewNavigatorEvent;
+			
+			private var loadScheduleStatement:SQLStatement;
+			
+			protected function init(event:ViewNavigatorEvent):void
+			{
+				loadScheduleStatement = new SQLStatement();
+				loadScheduleStatement.sqlConnection = FlexGlobals.topLevelApplication.conn;
+				loadScheduleStatement.addEventListener(SQLEvent.RESULT, loadScheduleResult);				
+				var loadDiaryQuery:String = "SELECT * FROM users_schedule ORDER BY id DESC";				
+				loadScheduleStatement.text = loadDiaryQuery;
+				loadScheduleStatement.execute();
+			}
+			
+			private function loadScheduleResult(event:SQLEvent):void{
+				var result:SQLResult = loadScheduleStatement.getResult();
+				var scheduleArray:Array = new Array();
+				
+				if(result.data != null){
+					for(var i:int = 0; i<result.data.length; i++){
+						scheduleArray.push({id:result.data[i].id, type:result.data[i].type, content:unescape(result.data[i].content), title:unescape(result.data[i].title), date:result.data[i].date});					
+					}
+				}
+				
+				myList.dataProvider = new ArrayCollection(scheduleArray);
+			}
+			
+			protected function selectTast(event:IndexChangeEvent):void
+			{
+				navigator.pushView(editScheduleView, myList.selectedItem);
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:navigationContent>
+		<s:Button click="navigator.popView()">
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="@Embed('assets/icons/160/1_navigation_previous_item.png')"
+										source240dpi="@Embed('assets/icons/240/1_navigation_previous_item.png')"
+										source320dpi="@Embed('assets/icons/320/1_navigation_previous_item.png')"/>
+			</s:icon>
+		</s:Button>
+	</s:navigationContent>
+	
+	<s:actionContent>
+		<s:Button click="navigator.pushView(addScheduleView)">
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="@Embed('assets/icons/160/5_content_new.png')"
+										source240dpi="@Embed('assets/icons/240/5_content_new.png')"
+										source320dpi="@Embed('assets/icons/320/5_content_new.png')"/>
+			</s:icon>
+		</s:Button>
+	</s:actionContent>
+	
+	<s:List id="myList" change="selectTast(event)" width="100%" height="100%" alternatingItemColors="#80A894" symbolColor="#536E60" contentBackgroundColor="#536E60" selectionColor="#536E60" downColor="#536E60" focusColor="#536E60" color="#FFFFFF" fontFamily="MyFont2">
+		<s:itemRenderer>
+			<fx:Component>
+				<s:IconItemRenderer labelFunction="myLabelFunction" messageFunction="myMessageFunction" messageStyleName="myMessageStyle">
+					<s:decorator>
+						<s:MultiDPIBitmapSource source160dpi="@Embed('assets/icons/160/1_navigation_next_item.png')"
+												source240dpi="@Embed('assets/icons/240/1_navigation_next_item.png')"
+												source320dpi="@Embed('assets/icons/320/1_navigation_next_item.png')"/>
+					</s:decorator>
+					
+					<fx:Script> 
+						<![CDATA[
+							
+							private function myLabelFunction(item:Object):String{
+								return data.title;
+							}
+							
+							private function myMessageFunction(item:Object):String{
+								if(data.type == "undefined"){
+									return data.date;
+								} else {
+									return data.type +"\n"+ data.date;
+								}
+								
+							}
+							
+						]]>
+					</fx:Script>
+				</s:IconItemRenderer>
+			</fx:Component>
+		</s:itemRenderer>
+	</s:List>
+	
+</s:View>

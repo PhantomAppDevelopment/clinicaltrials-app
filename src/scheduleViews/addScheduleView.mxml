@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark" title="Add a new Task" backgroundColor="#80A894">
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.core.FlexGlobals;
+			
+			import spark.events.IndexChangeEvent;
+			
+			private var saveScheduleStatement:SQLStatement;
+			
+			protected function saveSchedule(event:MouseEvent):void
+			{
+				if(titleTxt.text == ""){
+					//Do nothing
+				} else {
+					
+					saveScheduleStatement = new SQLStatement();
+					saveScheduleStatement.sqlConnection = FlexGlobals.topLevelApplication.conn;
+					saveScheduleStatement.addEventListener(SQLEvent.RESULT, addDiaryResult);
+					saveScheduleStatement.addEventListener(SQLErrorEvent.ERROR, addDiaryError);
+					var addDiaryQuery:String = "INSERT INTO users_schedule (title, content, date, type, status) VALUES " +
+						"('"+escape(titleTxt.text)+"','"+
+						escape(descriptionTxt.text)+"','"+
+						date1.selectedDate.toLocaleDateString()+' @ '+date2.selectedDate.toLocaleTimeString()+"','"+
+						typesList.selectedItem.label.toString()+"','"+
+						'Active'+"')";
+					
+					saveScheduleStatement.text = addDiaryQuery;
+					saveScheduleStatement.execute();
+				}
+			}
+			
+			private function addDiaryResult(event:SQLEvent):void{
+				navigator.popView();
+			}
+			
+			private function addDiaryError(event:SQLErrorEvent):void{
+				trace(event.error);
+			}
+			
+			protected function selectCategory(event:IndexChangeEvent):void
+			{
+				categoryCallout.closeDropDown();
+			}
+			
+		]]>
+	</fx:Script>
+	
+	
+	<s:navigationContent>
+		<s:Button click="navigator.popView()">
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="@Embed('assets/icons/160/1_navigation_previous_item.png')"
+										source240dpi="@Embed('assets/icons/240/1_navigation_previous_item.png')"
+										source320dpi="@Embed('assets/icons/320/1_navigation_previous_item.png')"/>
+			</s:icon>
+		</s:Button>
+	</s:navigationContent>
+	
+	<s:actionContent>
+		<s:Button click="saveSchedule(event)">
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="@Embed('assets/icons/160/5_content_save.png')"
+										source240dpi="@Embed('assets/icons/240/5_content_save.png')"
+										source320dpi="@Embed('assets/icons/320/5_content_save.png')"/>
+			</s:icon>
+		</s:Button>
+	</s:actionContent>
+	
+	<s:Scroller left="10" right="10" top="10" bottom="10">
+		<s:VGroup>
+			<s:TextInput id="titleTxt" contentBackgroundColor="#536E60" color="#FFFFFF" width="100%" prompt="Type a short title of the task" height="40"/>
+			
+			<s:TextArea id="descriptionTxt" contentBackgroundColor="#536E60" color="#FFFFFF" width="100%" prompt="Type the description of the task" height="150"/>
+			
+			<s:CalloutButton label="Select a Date" horizontalPosition="middle" verticalPosition="after" width="100%" height="40">
+				<s:calloutLayout>
+					<s:HorizontalLayout gap="0"/>
+				</s:calloutLayout>
+				<s:DateSpinner id="date1" fontSize="12" displayMode="date" bottom="0" height="150"/>
+				<s:DateSpinner id="date2" fontSize="12" displayMode="time" bottom="0" height="150"/>
+			</s:CalloutButton>
+			
+			<s:CalloutButton id="categoryCallout" label="Select a Category" horizontalPosition="middle" verticalPosition="after" width="100%" height="40">
+				<s:List id="typesList" change="selectCategory(event)" alternatingItemColors="#80A894" symbolColor="#536E60" selectionColor="#536E60" downColor="#536E60" focusColor="#536E60" color="#FFFFFF" fontFamily="MyFont2" width="250" height="135" verticalScrollPolicy="off">
+					<s:ArrayList>
+						<fx:Object label="Medication"/>
+						<fx:Object label="Appointment"/>
+						<fx:Object label="Other"/>
+					</s:ArrayList>
+				</s:List>
+			</s:CalloutButton>
+		</s:VGroup>
+	</s:Scroller>
+	
+	
+	
+	
+</s:View>

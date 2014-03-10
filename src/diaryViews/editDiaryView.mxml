@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark" title="Edit Diary Entry" viewDeactivate="deactivate(event)" backgroundColor="#10667D" xmlns:local="*">
+	<fx:Script>
+		<![CDATA[
+			import mx.core.FlexGlobals;
+			import mx.managers.PopUpManager;
+			
+			import spark.events.ViewNavigatorEvent;
+			
+			private var saveChangesStatement:SQLStatement;
+			
+			protected function saveChanges():void
+			{
+				if(myTitle.text == ""){
+					//Do nothing
+				} else {
+					
+					saveChangesStatement = new SQLStatement();
+					saveChangesStatement.sqlConnection = FlexGlobals.topLevelApplication.conn;
+					saveChangesStatement.addEventListener(SQLEvent.RESULT, saveChangesResult);
+					saveChangesStatement.addEventListener(SQLErrorEvent.ERROR, saveChangesError);
+					var addDiaryQuery:String = "UPDATE users_diary SET title='"+escape(myTitle.text)+"',content='"+escape(myText.text)+"' WHERE id='"+data.id+"'";
+					
+					saveChangesStatement.text = addDiaryQuery;
+					saveChangesStatement.execute();
+				}
+			}
+			
+			private function saveChangesResult(event:SQLEvent):void{
+				navigator.popView();
+			}
+			
+			private function saveChangesError(event:SQLErrorEvent):void{
+				trace(event.error);
+			}
+			
+			protected function openRemovePopUp(event:MouseEvent):void
+			{
+				popup.open(this, true);
+				PopUpManager.centerPopUp(popup);
+				popup.selectedDiary = data.id;
+			}
+			
+			protected function deactivate(event:ViewNavigatorEvent):void
+			{
+				popup.close();
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<local:removeDiaryPopUp id="popup"/>
+	</fx:Declarations>
+	
+	<s:navigationContent>
+		<s:Button click="navigator.popView()">
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="@Embed('assets/icons/160/1_navigation_previous_item.png')"
+										source240dpi="@Embed('assets/icons/240/1_navigation_previous_item.png')"
+										source320dpi="@Embed('assets/icons/320/1_navigation_previous_item.png')"/>
+			</s:icon>
+		</s:Button>
+	</s:navigationContent>
+	
+	<s:actionContent>
+		<s:Button click="openRemovePopUp(event)">
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="@Embed('assets/icons/160/5_content_remove.png')"
+										source240dpi="@Embed('assets/icons/240/5_content_remove.png')"
+										source320dpi="@Embed('assets/icons/320/5_content_remove.png')"/>
+			</s:icon>
+		</s:Button>
+		
+		<s:Button click="saveChanges()">
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="@Embed('assets/icons/160/5_content_save.png')"
+										source240dpi="@Embed('assets/icons/240/5_content_save.png')"
+										source320dpi="@Embed('assets/icons/320/5_content_save.png')"/>
+			</s:icon>
+		</s:Button>
+	</s:actionContent>
+	
+	<s:TextInput id="myTitle" text="{data.title}" color="#FFFFFF" contentBackgroundColor="#093844" left="10" right="10" top="10" height="40"/>
+	<s:TextArea id="myText" text="{data.content}" color="#FFFFFF" contentBackgroundColor="#093844" left="10" right="10" top="60" bottom="10"/>
+</s:View>

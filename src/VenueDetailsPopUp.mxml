@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:SkinnablePopUpContainer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+						   xmlns:s="library://ns.adobe.com/flex/spark" width="250" height="250" backgroundColor="#AD330E">
+	
+	<fx:Script>
+		<![CDATA[
+			import flash.net.navigateToURL;
+			
+			protected function call():void
+			{
+				if(telText.text.length == 0){
+					//Do nothing
+				} else {
+					navigateToURL(new URLRequest("tel:"+telText.text));
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:BitmapImage source="@Embed('assets/icons/phone.png')" smooth="true" width="150" height="150" horizontalCenter="0" verticalCenter="0" alpha=".5"/>
+	<s:Label id="myText" top="10" left="10" right="10" color="#FFFFFF" fontSize="20" fontFamily="MyFont" textAlign="center"/>
+	<s:Label id="telText" verticalCenter="0" horizontalCenter="0" fontSize="20" color="#FFFFFF" textAlign="center"/>
+	<s:Button click="this.close()" label="Close"  chromeColor="#910006" fontFamily="MyFont2" fontWeight="normal" color="#FFFFFF" bottom="20" right="20" width="100"/>
+	<s:Button click="call()" chromeColor="#009106" fontFamily="MyFont2" fontWeight="normal" color="#FFFFFF" bottom="20" left="20" width="100" label="Call"/>
+</s:SkinnablePopUpContainer>

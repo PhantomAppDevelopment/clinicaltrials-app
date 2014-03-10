@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark" title="Travel" backgroundColor="#D94214" viewDeactivate="deactivate(event)" xmlns:local="*">
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayList;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			import mx.rpc.events.ResultEvent;
+			
+			import spark.events.IndexChangeEvent;
+			import spark.events.ViewNavigatorEvent;
+			
+			private var selectedCategory:String = "4d4b7105d754a06374d81259";
+			
+			//Copy your own client ID
+			private var clientID:String = "";
+			
+			//Copy your own client secret
+			private var clientSecret:String = "";
+			
+			protected function vunueResult(event:ResultEvent):void
+			{
+				myBusy.visible = false;
+				
+				var rawData:Object = JSON.parse(String(event.result));
+				
+				trace(rawData.response.venues[0].name);
+				
+				var myArray:ArrayList = new ArrayList(rawData.response.venues as Array);
+				myList.dataProvider = myArray;
+
+			}
+			
+			private function changeCategory(newCategory:String, side:String):void{
+				if(side == "left"){
+					whiteRect.left = 0;
+					whiteRect.right = null
+					whiteRect.horizontalCenter = null;
+				} else if(side == "middle"){
+					whiteRect.horizontalCenter = 0;
+				} else if(side == "right"){
+					whiteRect.left = null;
+					whiteRect.right = 0;
+					whiteRect.horizontalCenter = null;
+				}
+				
+				selectedCategory = newCategory;
+				doSearch();
+			}
+			
+			protected function doSearch():void
+			{
+				if(myTextInput.text == ""){
+					//Do nothing
+				} else {
+					stage.focus = null;
+					myBusy.visible = true;
+					
+					venueSearch.url = "https://api.foursquare.com/v2/venues/search?near="+escape(myTextInput.text)+"&categoryId="+selectedCategory+"&limit=50"+
+						"&client_id="+clientID+"&client_secret="+clientSecret+"&v=20140101";
+					venueSearch.send();
+				}
+			}
+			
+			protected function openDetailsPopUp(event:IndexChangeEvent):void
+			{
+				popup.open(this, true);
+				PopUpManager.centerPopUp(popup);
+				popup.myText.text = myList.selectedItem.name;	
+				popup.telText.text = myList.selectedItem.contact.phone;
+			}
+			
+			protected function deactivate(event:ViewNavigatorEvent):void
+			{
+				popup.close();
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<s:HTTPService id="venueSearch" result="vunueResult(event)" resultFormat="text"/>
+		<local:VenueDetailsPopUp id="popup"/>
+	</fx:Declarations>
+	
+	<s:navigationContent>
+		<s:Button click="navigator.popView()">
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="@Embed('assets/icons/160/1_navigation_previous_item.png')"
+										source240dpi="@Embed('assets/icons/240/1_navigation_previous_item.png')"
+										source320dpi="@Embed('assets/icons/320/1_navigation_previous_item.png')"/>
+			</s:icon>
+		</s:Button>
+	</s:navigationContent>
+	
+	<s:Rect width="100%" top="0" height="50">
+		<s:fill>
+			<s:LinearGradient rotation="90">
+				<s:entries>
+					<s:GradientEntry color="#D94214"/>
+					<s:GradientEntry color="#82270A"/>														
+				</s:entries>
+			</s:LinearGradient>
+		</s:fill>
+	</s:Rect>
+	
+	<s:HGroup id="mainButtonbar" width="100%" top="0" height="50" gap="0" columnWidth="{mainButtonbar.width/3}" verticalAlign="middle">
+		<s:Label text="Restaurants" fontFamily="MyFont" color="#FFFFFF" fontSize="20" width="33%" textAlign="center"/>		
+		<s:Label text="Hotels" fontFamily="MyFont" color="#FFFFFF" fontSize="20" width="33%" textAlign="center"/>
+		<s:Label text="Transport" fontFamily="MyFont" color="#FFFFFF" fontSize="20" width="33%" textAlign="center"/>
+	</s:HGroup>
+	
+	<s:Graphic click="changeCategory('4d4b7105d754a06374d81259', 'left')" top="0" left="0">
+		<s:Rect width="{mainButtonbar.width/3}" height="50"/>
+	</s:Graphic>
+	
+	<s:Graphic click="changeCategory('4bf58dd8d48988d1fa931735,4bf58dd8d48988d1fb931735', 'middle')" top="0" horizontalCenter="0">
+		<s:Rect width="{mainButtonbar.width/3}" height="50"/>
+	</s:Graphic>
+	
+	<s:Graphic click="changeCategory('4bf58dd8d48988d1fe931735,4bf58dd8d48988d130951735', 'right')" top="0" right="0">
+		<s:Rect width="{mainButtonbar.width/3}" height="50"/>
+	</s:Graphic>
+	
+	<s:Rect id="whiteRect" left="0" width="33%" y="45" height="5">
+		<s:fill>
+			<s:LinearGradient rotation="90">
+				<s:entries>
+					<s:GradientEntry color="#FFFFFF"/>
+					<s:GradientEntry color="#999999"/>				
+				</s:entries>
+			</s:LinearGradient>
+		</s:fill>
+	</s:Rect>
+	
+	<s:Line width="100%" height="1" y="45">
+		<s:stroke>
+			<s:SolidColorStroke color="#617680"/>
+		</s:stroke>
+	</s:Line>
+	
+	<s:Line width="100%" height="1" y="50">
+		<s:stroke>
+			<s:SolidColorStroke color="#617680"/>
+		</s:stroke>
+	</s:Line>
+	
+	<s:TextInput id="myTextInput" enter="doSearch()" prompt="Ex: los angeles, chicago, new york" color="#FFFFFF" contentBackgroundColor="#AD330E" top="55" left="10" right="55" height="35"/>
+	<s:Image source="@Embed('assets/icons/search.png')" smooth="true" scaleMode="letterbox" width="35" height="35" right="10" y="55" click="doSearch()"/>
+	
+	<s:List id="myList" change="openDetailsPopUp(event)" width="100%" fontFamily="MyFont2" top="95" bottom="0" color="#FFFFFF" contentBackgroundColor="#AD330E" selectionColor="#AD330E" downColor="#AD330E" focusColor="#AD330E" alternatingItemColors="#D94214">
+		<s:itemRenderer>
+			<fx:Component>
+				<s:IconItemRenderer labelFunction="myLabelFunction" messageStyleName="myMessageStyle" messageFunction="myMessageFunction">
+					<s:decorator>
+						<s:MultiDPIBitmapSource source160dpi="@Embed('assets/icons/160/2_action_about.png')"
+												source240dpi="@Embed('assets/icons/240/2_action_about.png')"
+												source320dpi="@Embed('assets/icons/320/2_action_about.png')"/>
+					</s:decorator>
+					
+					<fx:Script>
+						<![CDATA[
+							
+							private function myLabelFunction(item:Object):String{
+								return data.name;
+							}
+							
+							private function myMessageFunction(item:Object):String{
+								if(data.location.address == undefined){
+									if(data.categories.length != 0){
+										return data.categories[0].name;
+									} else {
+										return "";
+									}
+								} else {
+									if(data.categories.length != 0){
+										return data.location.address + "\n" + data.categories[0].name;
+									} else {
+										return "";
+									}
+								}
+								
+								
+							}
+							
+						]]>
+					</fx:Script>
+				</s:IconItemRenderer>
+			</fx:Component>
+		</s:itemRenderer>
+	</s:List>
+	
+	<s:BusyIndicator id="myBusy" visible="false" verticalCenter="0" horizontalCenter="0"/>
+</s:View>

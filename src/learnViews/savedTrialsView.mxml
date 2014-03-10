@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark" title="Bookmarked Trials" backgroundColor="#52736B" viewActivate="init(event)">
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.core.FlexGlobals;
+			import mx.utils.ObjectUtil;
+			
+			import spark.events.IndexChangeEvent;
+			import spark.events.ViewNavigatorEvent;
+			
+			private var loadTrialsStatement:SQLStatement;
+			
+			protected function init(event:ViewNavigatorEvent):void
+			{
+				loadTrialsStatement = new SQLStatement();
+				loadTrialsStatement.sqlConnection = FlexGlobals.topLevelApplication.conn;
+				loadTrialsStatement.addEventListener(SQLEvent.RESULT, loadTrialsResult);				
+				var loadTrialsQuery:String = "SELECT * FROM users_trials ORDER BY id DESC";				
+				loadTrialsStatement.text = loadTrialsQuery;
+				loadTrialsStatement.execute();
+			}
+			
+			private function loadTrialsResult(event:SQLEvent):void{
+				var result:SQLResult = loadTrialsStatement.getResult();
+				var trialsArray:Array = new Array();
+				
+				if(result.data != null){
+					for(var i:int = 0; i<result.data.length; i++){
+						trialsArray.push({id:result.data[i].id, condition_summary:unescape(result.data[i].description), title:unescape(result.data[i].title), nct_id:result.data[i].url, saved:true});					
+					}
+				}
+				
+				myList.dataProvider = new ArrayCollection(trialsArray);
+				trace(ObjectUtil.toString(trialsArray));
+			}
+		
+			protected function selectStudy(event:IndexChangeEvent):void
+			{
+				navigator.pushView(clinicalStudyDetails, myList.selectedItem);
+			}
+			
+		]]>
+	</fx:Script>
+	
+	
+	
+	<s:navigationContent>
+		<s:Button click="navigator.popView()">
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="@Embed('assets/icons/160/1_navigation_previous_item.png')"
+										source240dpi="@Embed('assets/icons/240/1_navigation_previous_item.png')"
+										source320dpi="@Embed('assets/icons/320/1_navigation_previous_item.png')"/>
+			</s:icon>
+		</s:Button>
+	</s:navigationContent>
+	
+	<s:List id="myList" change="selectStudy(event)" width="100%" fontFamily="MyFont2" height="100%" color="#FFFFFF" contentBackgroundColor="#364C47" selectionColor="#364C47" downColor="#364C47" focusColor="#364C47" alternatingItemColors="#52736B">
+		<s:itemRenderer>
+			<fx:Component>
+				<s:IconItemRenderer labelFunction="myLabelFunction" messageFunction="myMessageFunction" messageStyleName="myMessageStyle">
+					<s:decorator>
+						<s:MultiDPIBitmapSource source160dpi="@Embed('assets/icons/160/1_navigation_next_item.png')"
+												source240dpi="@Embed('assets/icons/240/1_navigation_next_item.png')"
+												source320dpi="@Embed('assets/icons/320/1_navigation_next_item.png')"/>
+					</s:decorator>
+					<fx:Script>
+						<![CDATA[
+							
+							private function myLabelFunction(item:Object):String{
+								return data.title;
+							}
+							
+							private function myMessageFunction(item:Object):String{
+								return data.condition_summary;
+							}
+							
+						]]>
+					</fx:Script>
+				</s:IconItemRenderer>
+			</fx:Component>
+		</s:itemRenderer>
+	</s:List>
+</s:View>

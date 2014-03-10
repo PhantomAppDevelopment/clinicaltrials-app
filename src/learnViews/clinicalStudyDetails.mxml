@@ -1,0 +1,461 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark" title="{data.condition_summary}" viewActivate="init(event)" backgroundColor="#52736B">
+	<fx:Script>
+		<![CDATA[
+			import mx.controls.Spacer;
+			import mx.core.FlexGlobals;
+			import mx.events.FlexEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			import spark.components.Label;
+			import spark.events.ViewNavigatorEvent;
+			
+			private var saveStatement:SQLStatement;
+			
+			protected function init(event:ViewNavigatorEvent):void
+			{
+				studyService.url = "http://clinicaltrials.gov/show/"+data.nct_id+"?resultsxml=true";
+				studyService.send();
+				myBusy.visible = true;
+			}
+			
+			private function changeState(stateName:String):void{
+				currentState = stateName;
+			}
+			
+			private function createLabel(myText:String):Label{
+				var myLabel:Label = new Label();
+				myLabel.setStyle("color", 0xFFFFFF);
+				myLabel.setStyle("fontSize", 14);
+				myLabel.setStyle("lineHeight", 20);
+				myLabel.percentWidth = 100;
+				myLabel.text = myText;
+				return myLabel;
+			}
+			
+			private function createSpacer():Spacer{
+				var mySpacer:Spacer = new Spacer();
+				mySpacer.width = 10;
+				mySpacer.height = 10;
+				return mySpacer;
+			}
+			
+			protected function resultHandler(event:ResultEvent):void
+			{
+				myBusy.visible = false;
+							
+				var titleText:Label = new Label();
+				titleText.setStyle('fontFamily', 'MyFont');
+				titleText.setStyle("color", 0xFFFFFF);
+				titleText.setStyle("fontSize", 18);
+				titleText.percentWidth = 100;
+				titleText.text = studyService.lastResult.official_title;
+				myGroup.addElement(titleText);
+				
+				myGroup.addElement(createSpacer());
+				
+				myGroup.addElement(createLabel("Status: "+studyService.lastResult.overall_status));
+				myGroup.addElement(createLabel("Start date: "+studyService.lastResult.start_date));
+				myGroup.addElement(createLabel("Completion date: "+studyService.lastResult.completion_date));
+				myGroup.addElement(createLabel("Primary Completion date: "+studyService.lastResult.primary_completion_date));
+				myGroup.addElement(createLabel("Phase: "+studyService.lastResult.phase));
+				myGroup.addElement(createLabel("Study Type: "+studyService.lastResult.study_type));
+				myGroup.addElement(createLabel("Study Design: "+studyService.lastResult.study_design));
+				
+				myGroup.addElement(createSpacer());
+				
+				myGroup.addElement(createLabel(studyService.lastResult.brief_summary.textblock));
+				myGroup.addElement(createLabel(studyService.lastResult.detailed_description.textblock));
+			}
+		
+			protected function enterStudyOverviewState(event:FlexEvent):void
+			{
+				whiteRect0.visible = true;
+				whiteRect1.visible = false;
+				whiteRect2.visible = false;
+				whiteRect3.visible = false;
+			}
+
+			protected function enterStudyLocationState(event:FlexEvent):void
+			{
+				whiteRect0.visible = false;
+				whiteRect1.visible = false;
+				whiteRect2.visible = true;
+				whiteRect3.visible = false;
+				
+				myGroup2.removeAllElements();
+				
+				if(studyService.lastResult.overall_contact.length() != 0){
+					var myContactText:Label = new Label();
+					myContactText.setStyle('fontFamily', 'MyFont');
+					myContactText.setStyle("color", 0xFFFFFF);
+					myContactText.setStyle("fontSize", 20);
+					myContactText.setStyle("textAlign", "left");
+					myContactText.percentWidth = 100;
+					myContactText.text = "Overall Contact";
+					myGroup2.addElement(myContactText);					
+					
+					myGroup2.addElement(createLabel(studyService.lastResult.overall_contact.last_name));
+					myGroup2.addElement(createLabel("Tel: " + studyService.lastResult.overall_contact.phone));
+					myGroup2.addElement(createLabel("Email: " + studyService.lastResult.overall_contact.email));
+					
+					myGroup2.addElement(createSpacer());
+				}
+				
+				if(studyService.lastResult.overall_contact_backup.length() != 0){
+					var backupContactText:Label = new Label();
+					backupContactText.setStyle('fontFamily', 'MyFont');
+					backupContactText.setStyle("color", 0xFFFFFF);
+					backupContactText.setStyle("fontSize", 20);
+					backupContactText.setStyle("textAlign", "left");
+					backupContactText.percentWidth = 100;
+					backupContactText.text = "Overall Contact Backup";
+					myGroup2.addElement(backupContactText);
+					
+					myGroup2.addElement(createLabel(studyService.lastResult.overall_contact_backup.last_name));
+					myGroup2.addElement(createLabel("Tel: " + studyService.lastResult.overall_contact_backup.phone));
+					myGroup2.addElement(createLabel("Email: " + studyService.lastResult.overall_contact_backup.email));
+					
+					myGroup2.addElement(createSpacer());
+				}
+				
+				var myLocationText:Label = new Label();
+				myLocationText.setStyle('fontFamily', 'MyFont');
+				myLocationText.setStyle("color", 0xFFFFFF);
+				myLocationText.setStyle("fontSize", 20);
+				myLocationText.setStyle("textAlign", "left");
+				myLocationText.percentWidth = 100;
+				myLocationText.text = "Location(s)";
+				myGroup2.addElement(myLocationText);
+							
+				for(var i:uint = 0; i<=studyService.lastResult.location.length()-1; i++){
+					
+					var facilityName:String = studyService.lastResult.location[i].facility.name;
+					if(facilityName == ""){
+						facilityName = "No facility name especified.";
+					}
+					
+					var stateName:String = studyService.lastResult.location[i].facility.address.state;
+					if(stateName == ""){
+						//
+					} else {
+						stateName = ", " + stateName;
+					}
+					
+					var zipCode:String = studyService.lastResult.location[i].facility.address.zip;
+					if(zipCode == ""){
+						//
+					} else {
+						zipCode = zipCode + ", ";
+					}
+					
+					myGroup2.addElement(createLabel(facilityName));
+					myGroup2.addElement(createLabel(studyService.lastResult.location[i].facility.address.city + stateName));
+					myGroup2.addElement(createLabel(studyService.lastResult.location[i].facility.address.country));
+
+					myGroup2.addElement(createSpacer());
+				}
+			}
+			
+			protected function enterStudyDetailsState(event:FlexEvent):void
+			{
+				whiteRect0.visible = false;
+				whiteRect1.visible = true;
+				whiteRect2.visible = false;
+				whiteRect3.visible = false;
+				
+				myGroup1.removeAllElements();
+				
+				if(studyService.lastResult.eligibility.length() != 0){
+					var eligibilityText:Label = new Label();
+					eligibilityText.setStyle('fontFamily', 'MyFont');
+					eligibilityText.setStyle("color", 0xFFFFFF);
+					eligibilityText.setStyle("fontSize", 20);
+					eligibilityText.setStyle("textAlign", "left");
+					eligibilityText.percentWidth = 100;
+					eligibilityText.text = "Eligibility";
+					myGroup1.addElement(eligibilityText);		
+					
+					myGroup1.addElement(createLabel("Gender: " + studyService.lastResult.eligibility.gender));
+					myGroup1.addElement(createLabel("Minimum age: " + studyService.lastResult.eligibility.minimum_age));
+					myGroup1.addElement(createLabel("Maximum age: " + studyService.lastResult.eligibility.maximum_age));
+					myGroup1.addElement(createLabel("Healthy volunteers: " + studyService.lastResult.eligibility.healthy_volunteers));
+					myGroup1.addElement(createLabel(studyService.lastResult.eligibility.criteria.textblock));
+					
+					myGroup1.addElement(createSpacer());
+				}
+				
+				var interventionText:Label = new Label();
+				interventionText.setStyle('fontFamily', 'MyFont');
+				interventionText.setStyle("color", 0xFFFFFF);
+				interventionText.setStyle("fontSize", 20);
+				interventionText.setStyle("textAlign", "left");
+				interventionText.percentWidth = 100;
+				interventionText.text = "Intervention(s)";
+				myGroup1.addElement(interventionText);
+				
+				for(var i:uint = 0; i<=studyService.lastResult.intervention.length()-1; i++){
+					myGroup1.addElement(createLabel("Invervention Type: " + studyService.lastResult.intervention[i].intervention_type +"\n"+
+						"Intervention Name: " + studyService.lastResult.intervention[i].intervention_name +"\n"+ 
+						"Description: " + studyService.lastResult.intervention[i].description));	
+					
+					myGroup1.addElement(createSpacer());
+				}
+				
+				var primaryOutcomeText:Label = new Label();
+				primaryOutcomeText.setStyle('fontFamily', 'MyFont');
+				primaryOutcomeText.setStyle("color", 0xFFFFFF);
+				primaryOutcomeText.setStyle("fontSize", 20);
+				primaryOutcomeText.setStyle("textAlign", "left");
+				primaryOutcomeText.percentWidth = 100;
+				primaryOutcomeText.text = "Primary Outcome";
+				myGroup1.addElement(primaryOutcomeText);
+				
+				myGroup1.addElement(createLabel("Measure: " + studyService.lastResult.primary_outcome.measure +"\n"+ "Time frame: " + studyService.lastResult.primary_outcome.time_frame +"\n"+ "Safety Issue: " + studyService.lastResult.primary_outcome.safety_issue +"\n"+ "Description: " + studyService.lastResult.primary_outcome.description));
+				
+				myGroup1.addElement(createSpacer());
+				
+				var secondaryOutcomeText:Label = new Label();
+				secondaryOutcomeText.setStyle('fontFamily', 'MyFont');
+				secondaryOutcomeText.setStyle("color", 0xFFFFFF);
+				secondaryOutcomeText.setStyle("fontSize", 20);
+				secondaryOutcomeText.setStyle("textAlign", "left");
+				secondaryOutcomeText.percentWidth = 100;
+				secondaryOutcomeText.text = "Secondary Outcome(s)";
+				myGroup1.addElement(secondaryOutcomeText);
+				
+				for(var i:uint = 0; i<=studyService.lastResult.secondary_outcome.length()-1; i++){
+					myGroup1.addElement(createLabel("Measure: " + studyService.lastResult.secondary_outcome[i].measure +"\n"+
+						"Time frame: " + studyService.lastResult.secondary_outcome[i].time_frame +"\n"+ 
+						"Safety Issue: " + studyService.lastResult.secondary_outcome[i].safety_issue +"\n"+ 
+						"Description: " + studyService.lastResult.secondary_outcome[i].description));	
+					
+					myGroup1.addElement(createSpacer());
+				}
+			}
+			
+			protected function enterStudyResultsState(event:FlexEvent):void
+			{
+				whiteRect0.visible = false;
+				whiteRect1.visible = false;
+				whiteRect2.visible = false;
+				whiteRect3.visible = true;
+				
+				myGroup3.removeAllElements();
+				
+				if(studyService.lastResult.clinical_results.length() == 0){
+					var resultsText:Label = new Label();
+					resultsText.setStyle("color", 0xFFFFFF);
+					resultsText.setStyle("fontSize", 14);
+					resultsText.setStyle("textAlign", "left");
+					resultsText.percentWidth = 100;
+					resultsText.text = "There are no results yet.";
+					myGroup3.addElement(resultsText);
+				} else {
+					var participationFlowText:Label = new Label();
+					participationFlowText.setStyle('fontFamily', 'MyFont');
+					participationFlowText.setStyle("color", 0xFFFFFF);
+					participationFlowText.setStyle("fontSize", 20);
+					participationFlowText.setStyle("textAlign", "left");
+					participationFlowText.percentWidth = 100;
+					participationFlowText.text = "Participation Flow";
+					myGroup3.addElement(participationFlowText);
+					
+					for(var i:uint = 0; i<=studyService.lastResult.clinical_results.participant_flow.group_list.group.length()-1; i++){
+						myGroup3.addElement(createLabel("Title: " + studyService.lastResult.clinical_results.participant_flow.group_list.group[i].title +"\n"+
+							"Description: " + studyService.lastResult.clinical_results.participant_flow.group_list.group[i].description));	
+						
+						myGroup3.addElement(createSpacer());
+					}
+					
+					myGroup3.addElement(createSpacer());
+					
+					var outcomeText:Label = new Label();
+					outcomeText.setStyle('fontFamily', 'MyFont');
+					outcomeText.setStyle("color", 0xFFFFFF);
+					outcomeText.setStyle("fontSize", 20);
+					outcomeText.setStyle("textAlign", "left");
+					outcomeText.percentWidth = 100;
+					outcomeText.text = "Outcome(s)";
+					myGroup3.addElement(outcomeText);
+					
+					for(var i:uint = 0; i<=studyService.lastResult.clinical_results.outcome_list.outcome.length()-1; i++){
+						myGroup3.addElement(createLabel("Type: " + studyService.lastResult.clinical_results.outcome_list.outcome[i].type +"\n"+
+							"Title: " + studyService.lastResult.clinical_results.outcome_list.outcome[i].title +"\n"+ 
+							"Description: " + studyService.lastResult.clinical_results.outcome_list.outcome[i].description +"\n"+ 
+							"Safety Issue: " + studyService.lastResult.clinical_results.outcome_list.outcome[i].safety_issue +"\n"+ 
+							"Population: " + studyService.lastResult.clinical_results.outcome_list.outcome[i].population +"\n"+ 
+							"Time frame: " + studyService.lastResult.clinical_results.outcome_list.outcome[i].time_frame));	
+						
+						myGroup3.addElement(createSpacer());
+					}
+				}
+			}
+			
+			protected function saveStudy():void
+			{
+				saveStatement = new SQLStatement();
+				saveStatement.sqlConnection = FlexGlobals.topLevelApplication.conn;
+				saveStatement.addEventListener(SQLEvent.RESULT, saveTrialResult);
+				saveStatement.addEventListener(SQLErrorEvent.ERROR, saveTrialError);
+				var addDiaryQuery:String = "INSERT INTO users_trials (title, description, url) VALUES " +
+					"('"+escape(data.condition_summary)+"','"+escape(data.title)+"','"+data.nct_id+"')";
+				
+				saveStatement.text = addDiaryQuery;
+				saveStatement.execute();
+			}
+			
+			private function saveTrialResult(event:SQLEvent):void{
+				saveBtn.label = "Saved";
+				saveBtn.enabled = false;
+			}
+			
+			private function saveTrialError(event:SQLErrorEvent):void{
+				trace(event.error);
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<s:HTTPService id="studyService" resultFormat="e4x" result="resultHandler(event)"/>
+	</fx:Declarations>
+	
+	<s:states>
+		<s:State name="StudyOverviewState" enterState="enterStudyOverviewState(event)" />
+		<s:State name="StudyDetailsState" enterState="enterStudyDetailsState(event)" />
+		<s:State name="StudyLocationState" enterState="enterStudyLocationState(event)" />
+		<s:State name="StudyResultsState" enterState="enterStudyResultsState(event)" />
+	</s:states>
+	
+	<s:navigationContent>
+		<s:Button click="navigator.popView()">
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="@Embed('assets/icons/160/1_navigation_previous_item.png')"
+										source240dpi="@Embed('assets/icons/240/1_navigation_previous_item.png')"
+										source320dpi="@Embed('assets/icons/320/1_navigation_previous_item.png')"/>
+			</s:icon>
+		</s:Button>
+	</s:navigationContent>
+	
+	<s:actionContent>
+		<s:Button id="saveBtn" fontFamily="MyFont2" fontWeight="normal" click="saveStudy()">
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="@Embed('assets/icons/160/5_content_save.png')"
+										source240dpi="@Embed('assets/icons/240/5_content_save.png')"
+										source320dpi="@Embed('assets/icons/320/5_content_save.png')"/>
+			</s:icon>
+		</s:Button>
+	</s:actionContent>
+	
+	<s:Rect radiusX="5" radiusY="5" left="5" right="5" top="55" bottom="5">
+		<s:fill>
+			<s:SolidColor color="#364C47"/>
+		</s:fill>
+	</s:Rect>
+	
+	<s:Rect width="100%" top="0" height="50">
+		<s:fill>
+			<s:LinearGradient rotation="90">
+				<s:entries>
+					<s:GradientEntry color="#52736B"/>
+					<s:GradientEntry color="#364C47"/>														
+				</s:entries>
+			</s:LinearGradient>
+		</s:fill>
+	</s:Rect>
+	
+	<s:HGroup id="mainButtonbar" width="100%" top="0" height="50" gap="0" columnWidth="{mainButtonbar.width/4}" verticalAlign="middle">
+		<s:Group click="changeState('StudyOverviewState')" width="100%" height="100%">
+			<s:Label text="Overview" fontFamily="MyFont" color="#FFFFFF" fontSize="20" width="100%" horizontalCenter="0" verticalCenter="0" textAlign="center"/>	
+			<s:Rect id="whiteRect0" visible="true" width="100%" bottom="0" height="5">
+				<s:fill>
+					<s:LinearGradient rotation="90">
+						<s:entries>
+							<s:GradientEntry color="#FFFFFF"/>
+							<s:GradientEntry color="#999999"/>				
+						</s:entries>
+					</s:LinearGradient>
+				</s:fill>
+			</s:Rect>
+		</s:Group>
+		<s:Group click="changeState('StudyDetailsState')" width="100%" height="100%">
+			<s:Label text="Details" fontFamily="MyFont" color="#FFFFFF" fontSize="20" width="100%" horizontalCenter="0" verticalCenter="0" textAlign="center"/>	
+			<s:Rect id="whiteRect1" visible="false" width="100%" bottom="0" height="5">
+				<s:fill>
+					<s:LinearGradient rotation="90">
+						<s:entries>
+							<s:GradientEntry color="#FFFFFF"/>
+							<s:GradientEntry color="#999999"/>				
+						</s:entries>
+					</s:LinearGradient>
+				</s:fill>
+			</s:Rect>
+		</s:Group>
+		<s:Group click="changeState('StudyLocationState')" width="100%" height="100%">
+			<s:Label text="Location" fontFamily="MyFont" color="#FFFFFF" fontSize="20" width="100%" horizontalCenter="0" verticalCenter="0" textAlign="center"/>	
+			<s:Rect id="whiteRect2" visible="false" width="100%" bottom="0" height="5">
+				<s:fill>
+					<s:LinearGradient rotation="90">
+						<s:entries>
+							<s:GradientEntry color="#FFFFFF"/>
+							<s:GradientEntry color="#999999"/>				
+						</s:entries>
+					</s:LinearGradient>
+				</s:fill>
+			</s:Rect>
+		</s:Group>
+		<s:Group click="changeState('StudyResultsState')" width="100%" height="100%">
+			<s:Label text="Results" fontFamily="MyFont" color="#FFFFFF" fontSize="20" width="100%" horizontalCenter="0" verticalCenter="0" textAlign="center"/>	
+			<s:Rect id="whiteRect3" visible="false" width="100%" bottom="0" height="5">
+				<s:fill>
+					<s:LinearGradient rotation="90">
+						<s:entries>
+							<s:GradientEntry color="#FFFFFF"/>
+							<s:GradientEntry color="#999999"/>				
+						</s:entries>
+					</s:LinearGradient>
+				</s:fill>
+			</s:Rect>
+		</s:Group>
+	</s:HGroup>
+	
+	<s:Line width="100%" height="1" y="45">
+		<s:stroke>
+			<s:SolidColorStroke color="#617680"/>
+		</s:stroke>
+	</s:Line>
+	
+	<s:Line width="100%" height="1" y="50">
+		<s:stroke>
+			<s:SolidColorStroke color="#617680"/>
+		</s:stroke>
+	</s:Line>
+
+	<s:Scroller includeIn="StudyOverviewState" left="15" right="15" top="65" bottom="15">
+		<s:Group>
+			<s:VGroup id="myGroup" width="100%" height="100%" gap="10"/>
+		</s:Group>
+	</s:Scroller>
+	
+	<s:Scroller includeIn="StudyDetailsState" left="15" right="15" top="65" bottom="15">
+		<s:Group>
+			<s:VGroup id="myGroup1" width="100%" height="100%" gap="10"/>
+		</s:Group>
+	</s:Scroller>
+	
+	<s:Scroller includeIn="StudyLocationState" left="15" right="15" top="65" bottom="15">
+		<s:Group>
+			<s:VGroup id="myGroup2" width="100%" height="100%" gap="10"/>
+		</s:Group>
+	</s:Scroller>
+	
+	<s:Scroller includeIn="StudyResultsState" left="15" right="15" top="65" bottom="15">
+		<s:Group>
+			<s:VGroup id="myGroup3" width="100%" height="100%" gap="10"/>
+		</s:Group>
+	</s:Scroller>
+	
+	<s:BusyIndicator id="myBusy" visible="false" verticalCenter="0" horizontalCenter="0"/>
+</s:View>

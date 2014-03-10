@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark" title="New Diary Entry" backgroundColor="#10667D">
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.core.FlexGlobals;
+			
+			private var addDiaryStatement:SQLStatement;
+			
+			protected function addDiary():void
+			{
+				if(myTitle.text == ""){
+					//Do nothing
+				} else {
+					
+					addDiaryStatement = new SQLStatement();
+					addDiaryStatement.sqlConnection = FlexGlobals.topLevelApplication.conn;
+					addDiaryStatement.addEventListener(SQLEvent.RESULT, addDiaryResult);
+					addDiaryStatement.addEventListener(SQLErrorEvent.ERROR, addDiaryError);
+					var addDiaryQuery:String = "INSERT INTO users_diary (title, date, content) VALUES " +
+						"('"+escape(myTitle.text)+"','"+new Date().getTime()+"','"+escape(myText.text)+"')";
+					
+					addDiaryStatement.text = addDiaryQuery;
+					addDiaryStatement.execute();
+				}
+			}
+			
+			private function addDiaryResult(event:SQLEvent):void{
+				navigator.popView();
+			}
+			
+			private function addDiaryError(event:SQLErrorEvent):void{
+				trace(event.error);
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:navigationContent>
+		<s:Button click="navigator.popView()">
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="@Embed('assets/icons/160/1_navigation_previous_item.png')"
+										source240dpi="@Embed('assets/icons/240/1_navigation_previous_item.png')"
+										source320dpi="@Embed('assets/icons/320/1_navigation_previous_item.png')"/>
+			</s:icon>
+		</s:Button>
+	</s:navigationContent>
+	
+	<s:actionContent>
+		<s:Button click="addDiary()">
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="@Embed('assets/icons/160/5_content_save.png')"
+										source240dpi="@Embed('assets/icons/240/5_content_save.png')"
+										source320dpi="@Embed('assets/icons/320/5_content_save.png')"/>
+			</s:icon>
+		</s:Button>
+	</s:actionContent>
+	
+	<s:TextInput id="myTitle" prompt="How are you feeling today?" color="#FFFFFF" contentBackgroundColor="#093844" left="10" right="10" top="10" height="40"/>
+	<s:TextArea id="myText" prompt="And how was your day?" color="#FFFFFF" contentBackgroundColor="#093844" left="10" right="10" top="60" bottom="10"/>
+</s:View>

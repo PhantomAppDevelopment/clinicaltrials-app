@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark" title="Diary" backgroundColor="#10667D" viewActivate="init(event)">
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.core.FlexGlobals;
+			
+			import spark.events.IndexChangeEvent;
+			import spark.events.ViewNavigatorEvent;
+			
+			private var loadDiaryStatement:SQLStatement;
+			
+			protected function init(event:ViewNavigatorEvent):void
+			{
+				loadDiaryStatement = new SQLStatement();
+				loadDiaryStatement.sqlConnection = FlexGlobals.topLevelApplication.conn;
+				loadDiaryStatement.addEventListener(SQLEvent.RESULT, loadDiaryResult);				
+				var loadDiaryQuery:String = "SELECT * FROM users_diary ORDER BY id DESC";				
+				loadDiaryStatement.text = loadDiaryQuery;
+				loadDiaryStatement.execute();
+			}
+			
+			private function loadDiaryResult(event:SQLEvent):void{
+				var result:SQLResult = loadDiaryStatement.getResult();
+				var diaryArray:Array = new Array();
+
+				if(result.data != null){
+					for(var i:int = 0; i<result.data.length; i++){
+						diaryArray.push({id:result.data[i].id, content:unescape(result.data[i].content), title:unescape(result.data[i].title), date:result.data[i].date});					
+					}
+				}
+
+				diaryList.dataProvider = new ArrayCollection(diaryArray);
+			}
+			
+			protected function selectDiary(event:IndexChangeEvent):void
+			{
+				navigator.pushView(editDiaryView, diaryList.selectedItem);
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:navigationContent>
+		<s:Button click="navigator.popView()">
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="@Embed('assets/icons/160/1_navigation_previous_item.png')"
+										source240dpi="@Embed('assets/icons/240/1_navigation_previous_item.png')"
+										source320dpi="@Embed('assets/icons/320/1_navigation_previous_item.png')"/>
+			</s:icon>
+		</s:Button>
+	</s:navigationContent>
+	
+	<s:actionContent>
+		<s:Button click="navigator.pushView(addDiaryView)">
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="@Embed('assets/icons/160/5_content_new.png')"
+										source240dpi="@Embed('assets/icons/240/5_content_new.png')"
+										source320dpi="@Embed('assets/icons/320/5_content_new.png')"/>
+			</s:icon>
+		</s:Button>
+	</s:actionContent>
+	
+	<s:List id="diaryList" change="selectDiary(event)" width="100%" height="100%" color="#FFFFFF" fontFamily="MyFont2" symbolColor="#093844" selectionColor="#093844" downColor="#093844" contentBackgroundColor="#093844" alternatingItemColors="#10667D">
+		<s:itemRenderer>
+			<fx:Component>
+				<s:IconItemRenderer labelFunction="myLabelFunction" messageFunction="myMessageFunction" messageStyleName="myMessageStyle">
+					<s:decorator>
+						<s:MultiDPIBitmapSource source160dpi="@Embed('assets/icons/160/1_navigation_next_item.png')"
+												source240dpi="@Embed('assets/icons/240/1_navigation_next_item.png')"
+												source320dpi="@Embed('assets/icons/320/1_navigation_next_item.png')"/>
+					</s:decorator>
+					
+					<fx:Script>
+						<![CDATA[
+							
+							private function myLabelFunction(item:Object):String{
+								return data.title;
+							}
+							
+							private function myMessageFunction(item:Object):String{
+								return new Date(data.date*1).toLocaleDateString() + " @ " + new Date(data.date*1).toLocaleTimeString();
+							}
+							
+						]]>
+					</fx:Script>
+				</s:IconItemRenderer>
+			</fx:Component>
+		</s:itemRenderer>
+	</s:List>
+
+</s:View>

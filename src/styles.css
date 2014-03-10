@@ -1,0 +1,59 @@
+/* CSS file */
+@namespace s "library://ns.adobe.com/flex/spark";
+
+@font-face 
+{
+	src: url("assets/font.otf");
+	fontFamily: MyFont;
+	fontStyle: normal;
+	fontWeight: normal;
+	embedAsCFF: true;
+	advancedAntiAliasing: true;
+	
+}
+
+@font-face 
+{
+	src: url("assets/font.otf");
+	fontFamily: MyFont2;
+	fontStyle: normal;
+	fontWeight: normal;
+	embedAsCFF: false;
+	advancedAntiAliasing: true;
+	
+}
+
+s|ViewNavigatorApplication
+{
+	backgroundColor: #000000;	
+}
+
+s|ActionBar #titleDisplay{
+	textAlign: center;
+	fontWeight: normal;
+	color: #FFFFFF;
+	fontFamily: MyFont2;
+}
+
+s|ActionBar{
+	chromeColor: #000000;
+}
+
+s|BusyIndicator
+{
+	symbolColor: #FFFFFF;	
+}
+
+.myMessageStyle
+{
+	fontFamily: _sans;
+	color: #FFFFFF;
+	fontSize: 12px;
+}
+
+.myMessageStyle2
+{
+	fontFamily: MyFont;
+	color: #FFFFFF;
+	fontSize: 12px;
+}

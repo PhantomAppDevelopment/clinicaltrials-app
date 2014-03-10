@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:SkinnablePopUpContainer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+						   xmlns:s="library://ns.adobe.com/flex/spark" width="250" height="140" backgroundColor="#80A894">
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.core.FlexGlobals;
+
+			public var selectedDiary:int;
+			private var deleteDiaryStatement:SQLStatement;
+			
+			protected function deleteEntry(event:MouseEvent):void
+			{
+				deleteDiaryStatement = new SQLStatement();
+				deleteDiaryStatement.sqlConnection = FlexGlobals.topLevelApplication.conn;
+				deleteDiaryStatement.addEventListener(SQLEvent.RESULT, deleteEntryResult);
+				var addDiaryQuery:String = "DELETE FROM users_schedule WHERE id='"+selectedDiary+"'";
+				
+				deleteDiaryStatement.text = addDiaryQuery;
+				deleteDiaryStatement.execute();
+			}
+			
+			private function deleteEntryResult(event:SQLEvent):void{
+				this.close();
+				parentDocument.navigator.popView();
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:Label text="Are you sure you want to delete this Task?" top="10" left="10" right="10" color="#FFFFFF" fontSize="20" fontFamily="MyFont" textAlign="center"/>
+	<s:Button click="this.close()" label="Close" color="#000000" bottom="20" right="20" width="100"/>
+	<s:Button click="deleteEntry(event)" color="#000000" bottom="20" left="20" width="100" label="Delete"/>
+</s:SkinnablePopUpContainer>

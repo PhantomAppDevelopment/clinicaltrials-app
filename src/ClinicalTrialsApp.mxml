@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ViewNavigatorApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
+							xmlns:s="library://ns.adobe.com/flex/spark" firstView="views.ClinicalTrialsAppHomeView" splashScreenImage="@Embed('assets/splash.png')" splashScreenScaleMode="zoom" applicationDPI="160" applicationComplete="init(event)">
+	
+	<fx:Style source="styles.css"/>
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			
+			public var conn:SQLConnection;
+			public var db:File;
+			private var myStatement:SQLStatement;
+			private var myQuery:String;
+			
+			protected function init(event:FlexEvent):void
+			{
+				db = File.applicationStorageDirectory.resolvePath("medical.db");
+				conn = new SQLConnection();
+				conn.addEventListener(SQLEvent.OPEN, openDatabaseHandler);
+				conn.openAsync(db);
+			}
+			
+			private function openDatabaseHandler(event:SQLEvent):void{
+				myStatement = new SQLStatement();
+				myStatement.sqlConnection = conn;
+				myStatement.addEventListener(SQLEvent.RESULT, openDatabaseResult);				
+				myQuery = "CREATE TABLE IF NOT EXISTS users_diary (id INTEGER PRIMARY KEY, title TEXT, date TEXT, content TEXT)";
+				myStatement.text = myQuery;
+				myStatement.execute();
+				
+				myStatement = new SQLStatement();
+				myStatement.sqlConnection = conn;
+				myStatement.addEventListener(SQLEvent.RESULT, openDatabaseResult);				
+				myQuery = "CREATE TABLE IF NOT EXISTS users_trials (id INTEGER PRIMARY KEY, title TEXT, description TEXT, url TEXT UNIQUE)";
+				myStatement.text = myQuery;
+				myStatement.execute();
+				
+				myStatement = new SQLStatement();
+				myStatement.sqlConnection = conn;
+				myStatement.addEventListener(SQLEvent.RESULT, openDatabaseResult);				
+				myQuery = "CREATE TABLE IF NOT EXISTS users_schedule (id INTEGER PRIMARY KEY, date TEXT, content TEXT, type TEXT, title TEXT, status TEXT)";
+				myStatement.text = myQuery;
+				myStatement.execute();
+			}
+			
+			private function openDatabaseResult(event:SQLEvent):void{
+				//Alert.show("Database Opened", "Success");
+			}
+		]]>
+	</fx:Script>
+	
+</s:ViewNavigatorApplication>

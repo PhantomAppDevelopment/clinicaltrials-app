@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark" title="Learn" backgroundColor="#52736B" destructionPolicy="never">
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.XMLListCollection;
+			import mx.events.FlexEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			import spark.events.IndexChangeEvent;
+			
+			protected function doSearch():void
+			{
+				if(myTextInput.text == ""){
+					//Do Nothing
+				} else{
+					stage.focus = null;
+					searchService.url = "http://clinicaltrials.gov/search?term="+escape(myTextInput.text)+"&displayxml=true";
+					searchService.send();
+					myBusy.visible = true;
+				}
+			}
+			
+			protected function resultHandler(event:ResultEvent):void
+			{
+				myBusy.visible = false;
+				
+				var myXMLList:XMLList = new XMLList(event.result.clinical_study);
+				var myXMLListCollection:XMLListCollection = new XMLListCollection(myXMLList);
+				myList.dataProvider = myXMLListCollection;
+			}
+			
+			protected function selectStudy(event:IndexChangeEvent):void
+			{
+				navigator.pushView(clinicalStudyDetails, myList.selectedItem);
+			}
+			
+		]]>
+	</fx:Script>
+	
+	
+	<fx:Declarations>
+		<s:HTTPService id="searchService" result="resultHandler(event)" resultFormat="e4x"/>
+	</fx:Declarations>
+	
+	<s:navigationContent>
+		<s:Button click="navigator.popView()">
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="@Embed('assets/icons/160/1_navigation_previous_item.png')"
+										source240dpi="@Embed('assets/icons/240/1_navigation_previous_item.png')"
+										source320dpi="@Embed('assets/icons/320/1_navigation_previous_item.png')"/>
+			</s:icon>
+		</s:Button>
+	</s:navigationContent>
+	
+	<s:actionContent>
+		<s:Button click="navigator.pushView(savedTrialsView)">
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="@Embed('assets/icons/160/3_rating_important.png')"
+										source240dpi="@Embed('assets/icons/240/3_rating_important.png')"
+										source320dpi="@Embed('assets/icons/320/3_rating_important.png')"/>
+			</s:icon>
+		</s:Button>
+	</s:actionContent>
+	
+	<s:TextInput id="myTextInput" enter="doSearch()" prompt="Ex: heart attack, PTSD, diabetes" color="#FFFFFF" contentBackgroundColor="#364C47" top="10" left="10" right="55" height="35"/>
+	<s:Image source="@Embed('assets/icons/search.png')" smooth="true" scaleMode="letterbox" width="35" height="35" right="10" y="10" click="doSearch()"/>
+	
+	<s:List id="myList" change="selectStudy(event)" width="100%" fontFamily="MyFont2" top="55" bottom="0" color="#FFFFFF" contentBackgroundColor="#364C47" selectionColor="#364C47" downColor="#364C47" focusColor="#364C47" alternatingItemColors="#52736B">
+		<s:itemRenderer>
+			<fx:Component>
+				<s:IconItemRenderer labelFunction="myLabelFunction" messageFunction="myMessageFunction" messageStyleName="myMessageStyle">
+					<s:decorator>
+						<s:MultiDPIBitmapSource source160dpi="@Embed('assets/icons/160/1_navigation_next_item.png')"
+												source240dpi="@Embed('assets/icons/240/1_navigation_next_item.png')"
+												source320dpi="@Embed('assets/icons/320/1_navigation_next_item.png')"/>
+					</s:decorator>
+					<fx:Script>
+						<![CDATA[
+							
+							private function myLabelFunction(item:Object):String{
+								return data.condition_summary;
+							}
+							
+							private function myMessageFunction(item:Object):String{
+								return data.title;
+							}
+							
+						]]>
+					</fx:Script>
+				</s:IconItemRenderer>
+			</fx:Component>
+		</s:itemRenderer>
+	</s:List>
+	
+	<s:BusyIndicator id="myBusy" visible="false" verticalCenter="0" horizontalCenter="0"/>
+</s:View>
